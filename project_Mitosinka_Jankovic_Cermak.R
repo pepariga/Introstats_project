@@ -153,3 +153,5 @@ head(master_data)
 # Zjistíme finální počet řádků naší Master tabulky
 print(paste("Finální počet řádků v master_data:", nrow(master_data)))
 
+#ondra
+
