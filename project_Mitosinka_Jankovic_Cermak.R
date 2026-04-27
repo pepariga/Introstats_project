@@ -124,3 +124,32 @@ print(setdiff(unique(labour_costs_clean$country), unique(labour_final$country)))
 
 print("Smazáno z HICP (Inflace):")
 print(setdiff(unique(hicp_clean$country), unique(hicp_final$country)))
+
+
+
+# --- 5. SPOJENÍ DO JEDNÉ TABULKY (MERGE) ---
+
+# 5.1 Výběr pouze nezbytných sloupců pro spojení
+# Necháme si jen stát, rok a tu konkrétní naměřenou hodnotu
+hpi_for_join <- hpi_final %>% select(country, year, hpi_value)
+labour_for_join <- labour_final %>% select(country, year, wage_growth)
+hicp_for_join <- hicp_final %>% select(country, year, inflation_rate)
+
+# 5.2 Samotné spojení (Merge) pomocí inner_join
+# Rko automaticky spáruje řádky, které mají stejnou zemi a stejný rok
+master_data <- hpi_for_join %>%
+  inner_join(labour_for_join, by = c("country", "year")) %>%
+  inner_join(hicp_for_join, by = c("country", "year"))
+
+# 5.3 Vytvoření nového sloupce "Affordability Gap" (Propast v dostupnosti)
+# Tento výpočet ukazuje, o kolik procent rostly ceny domů rychleji než platy
+master_data <- master_data %>%
+  mutate(affordability_gap = hpi_value - wage_growth)
+
+# --- 6. KONTROLA VÝSLEDKU ---
+# Podívej se na prvních pár řádků výsledné tabulky
+head(master_data)
+
+# Zjistíme finální počet řádků naší Master tabulky
+print(paste("Finální počet řádků v master_data:", nrow(master_data)))
+
