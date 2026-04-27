@@ -95,3 +95,32 @@ nrow(labour_final)
 nrow(hicp_final)
 
 setdiff(countries_hpi, common_countries)
+
+
+
+# --- 5. KONTROLA ZEMÍ (KTERÉ ZBYLY A KTERÉ BYLY SMAZÁNY) ---
+
+# 5.1 Jaké unikátní země nám reálně zbyly po VŠECH filtrech?
+print("--- ZBYLÉ ZEMĚ VE FINÁLNÍCH SOUBORECH ---")
+print("HPI:")
+print(unique(hpi_final$country))
+
+print("Labour Costs:")
+print(unique(labour_final$country))
+
+print("HICP:")
+print(unique(hicp_final$country))
+
+
+# 5.2 Které země byly z jednotlivých souborů VYMAZÁNY?
+# (Porovnáváme původní čistá data s finálními vyfiltrovanými)
+print("--- SMAZANÉ ZEMĚ ---")
+
+print("Smazáno z HPI (Ceny domů):")
+print(setdiff(unique(hpi_clean$country), unique(hpi_final$country)))
+
+print("Smazáno z Labour Costs (Platy):")
+print(setdiff(unique(labour_costs_clean$country), unique(labour_final$country)))
+
+print("Smazáno z HICP (Inflace):")
+print(setdiff(unique(hicp_clean$country), unique(hicp_final$country)))
