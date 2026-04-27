@@ -44,5 +44,3 @@ hpi_clean <- hpi_data %>%
 head(labour_costs_clean)
 head(hicp_clean)
 head(hpi_clean)
-head(hpi_clean)
-
