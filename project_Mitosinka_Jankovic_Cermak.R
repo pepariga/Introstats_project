@@ -120,3 +120,5 @@ length(dropped_countries_labour_costs)
 length(complete_countries)
 
 
+#ondra
+
