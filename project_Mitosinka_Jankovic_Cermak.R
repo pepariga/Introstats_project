@@ -102,11 +102,14 @@ final_data_complete <- final_data_no_NA %>%
   filter(n_distinct(year) == 10) %>% 
   ungroup() 
 
-# Checking what countries were delete from each dataset
+# Checking what countries were delete from each dataset 
 complete_countries <- unique(final_data_complete$country)
 original_countries_HPI <- unique(hpi_data$geo)
 original_countries_HICP <- unique(hicp_data$geo)
 original_countries_labour_costs <- unique(labour_costs$geo)
+length(original_countries_HPI)
+length(original_countries_HICP)
+length(original_countries_labour_costs)
 
 # Printing number of deleted countries from each dataset
 dropped_countries_HPI <- setdiff(original_countries_HPI, complete_countries)
@@ -119,6 +122,4 @@ length(dropped_countries_labour_costs)
 # Print the total number of countries studied
 length(complete_countries)
 
-
-#ondra
 
