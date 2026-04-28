@@ -8,9 +8,8 @@ hicp_data <- read_csv("tec00118_page_linear.csv")
 
 hpi_data <- read_csv("prc_hpi_a$defaultview_linear.csv")
 
-# --- 2. DATA CLEANING ---
 
-# 2.1 Clean Labour Costs
+# Cleaning Labour Costs
 labour_costs_clean <- labour_costs %>%
   select(geo, TIME_PERIOD, nace_r2, lcstruct, unit, OBS_VALUE) %>%
   rename(
@@ -21,7 +20,7 @@ labour_costs_clean <- labour_costs %>%
     wage_growth = OBS_VALUE
   )
 
-# 2.2 Clean General Inflation (HICP)
+# Cleaning HICP
 hicp_clean <- hicp_data %>%
   select(geo, TIME_PERIOD, unit, OBS_VALUE) %>%
   rename(
@@ -30,7 +29,7 @@ hicp_clean <- hicp_data %>%
     inflation_rate = OBS_VALUE
   )
 
-# 2.3 Clean House Price Index (HPI)
+# Cleaning HPI
 hpi_clean <- hpi_data %>%
   select(geo, TIME_PERIOD, purchase, unit, OBS_VALUE) %>%
   rename(
@@ -39,23 +38,17 @@ hpi_clean <- hpi_data %>%
     hpi_value = OBS_VALUE
   )
 
-# --- 3. QUICK CHECK ---
-# Print the first few rows to make sure it looks good
-head(labour_costs_clean)
-head(hicp_clean)
-head(hpi_clean)
 
-# 3.1 Get a list of all unique countries from each dataset
+# Get lists of unique countries from each dataset
 countries_lc <- unique(labour_costs_clean$country)
 countries_hicp <- unique(hicp_clean$country)
 countries_hpi <- unique(hpi_clean$country)
 
 common_countries <- intersect(intersect(countries_lc, countries_hicp), countries_hpi)
-print(paste("Number of common countries:", length(common_countries)))
 print(common_countries)
 
 
-# 3.3 Delete the excess countries from our datasets
+# Deleting excess countries from each dataset
 labour_costs_filtered <- labour_costs_clean %>%
   filter(country %in% common_countries)
 
@@ -66,90 +59,64 @@ hpi_filtered <- hpi_clean %>%
   filter(country %in% common_countries)
 
 
-unique(hpi_filtered$purchase)
-unique(hpi_filtered$unit)
-
-unique(labour_costs_filtered$industry)
-unique(labour_costs_filtered$cost_type)
-
-# --- 4. FINÁLNÍ FILTROVÁNÍ KATEGORIÍ ---
-
-# 4.1 HPI: Chceme jen celkové nákupy (Total) a roční změnu
+# Give us only total annual % change from last year
 hpi_final <- hpi_filtered %>%
   filter(purchase == "Total", 
-         unit == "Annual average rate of change") # nebo "Annual average index, 2015=100"
+         unit == "Annual average rate of change") 
 
-# 4.2 Labour: Chceme celou ekonomiku, jen platy a roční změnu
+# We want the wages and salaries for the whole ekonomy in % difference acording to last year
 labour_final <- labour_costs_filtered %>%
   filter(industry %in% c("B-S", "Industry, construction and services (except activities of households as employers and extra-territorial organisations and bodies)"), 
          cost_type %in% c("D11", "Wages and salaries (total)"), 
          unit == "Percentage change on previous period")
 
-# 4.3 HICP: Jen kontrola, abychom měli stejnou jednotku
+# Just cheking so we have also % change from last year
 hicp_final <- hicp_filtered %>%
   filter(unit == "Annual average rate of change") 
 
-# Kontrola, zda máme všude zhruba podobný počet řádků!
-nrow(hpi_final)
-nrow(labour_final)
-nrow(hicp_final)
-
-setdiff(countries_hpi, common_countries)
 
 
-
-# --- 5. KONTROLA ZEMÍ (KTERÉ ZBYLY A KTERÉ BYLY SMAZÁNY) ---
-
-# 5.1 Jaké unikátní země nám reálně zbyly po VŠECH filtrech?
-print("--- ZBYLÉ ZEMĚ VE FINÁLNÍCH SOUBORECH ---")
-print("HPI:")
-print(unique(hpi_final$country))
-
-print("Labour Costs:")
-print(unique(labour_final$country))
-
-print("HICP:")
-print(unique(hicp_final$country))
-
-
-# 5.2 Které země byly z jednotlivých souborů VYMAZÁNY?
-# (Porovnáváme původní čistá data s finálními vyfiltrovanými)
-print("--- SMAZANÉ ZEMĚ ---")
-
-print("Smazáno z HPI (Ceny domů):")
-print(setdiff(unique(hpi_clean$country), unique(hpi_final$country)))
-
-print("Smazáno z Labour Costs (Platy):")
-print(setdiff(unique(labour_costs_clean$country), unique(labour_final$country)))
-
-print("Smazáno z HICP (Inflace):")
-print(setdiff(unique(hicp_clean$country), unique(hicp_final$country)))
-
-
-
-# --- 5. SPOJENÍ DO JEDNÉ TABULKY (MERGE) ---
-
-# 5.1 Výběr pouze nezbytných sloupců pro spojení
-# Necháme si jen stát, rok a tu konkrétní naměřenou hodnotu
+# Preparing tables for unification
 hpi_for_join <- hpi_final %>% select(country, year, hpi_value)
 labour_for_join <- labour_final %>% select(country, year, wage_growth)
 hicp_for_join <- hicp_final %>% select(country, year, inflation_rate)
 
-# 5.2 Samotné spojení (Merge) pomocí inner_join
-# Rko automaticky spáruje řádky, které mají stejnou zemi a stejný rok
-master_data <- hpi_for_join %>%
+
+# Merging tables together by country and year
+final_data <- hpi_for_join %>%
   inner_join(labour_for_join, by = c("country", "year")) %>%
   inner_join(hicp_for_join, by = c("country", "year"))
 
-# 5.3 Vytvoření nového sloupce "Affordability Gap" (Propast v dostupnosti)
-# Tento výpočet ukazuje, o kolik procent rostly ceny domů rychleji než platy
-master_data <- master_data %>%
+# creating new column for affordability gap
+final_data <- final_data %>%
   mutate(affordability_gap = hpi_value - wage_growth)
 
-# --- 6. KONTROLA VÝSLEDKU ---
-# Podívej se na prvních pár řádků výsledné tabulky
-head(master_data)
 
-# Zjistíme finální počet řádků naší Master tabulky
-print(paste("Finální počet řádků v master_data:", nrow(master_data)))
+# Removing rows with empty fields
+final_data_no_NA <- final_data %>%
+  drop_na(hpi_value, wage_growth, inflation_rate, affordability_gap)
+
+# Removing countries with different amount of years than 10 (only less than 10 is possible)
+final_data_complete <- final_data_no_NA %>%
+  group_by(country) %>%
+  filter(n_distinct(year) == 10) %>% 
+  ungroup() 
+
+# Checking what countries were delete from each dataset
+complete_countries <- unique(final_data_complete$country)
+original_countries_HPI <- unique(hpi_data$geo)
+original_countries_HICP <- unique(hicp_data$geo)
+original_countries_labour_costs <- unique(labour_costs$geo)
+
+# Printing number of deleted countries from each dataset
+dropped_countries_HPI <- setdiff(original_countries_HPI, complete_countries)
+length(dropped_countries_HPI)
+dropped_countries_HICP <- setdiff(original_countries_HICP, complete_countries)
+length(dropped_countries_HICP)
+dropped_countries_labour_costs <- setdiff(original_countries_labour_costs, complete_countries)
+length(dropped_countries_labour_costs)
+
+# Print the total number of countries studied
+length(complete_countries)
+
 
