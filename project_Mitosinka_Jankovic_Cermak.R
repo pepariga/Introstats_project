@@ -119,7 +119,36 @@ length(dropped_countries_HICP)
 dropped_countries_labour_costs <- setdiff(original_countries_labour_costs, complete_countries)
 length(dropped_countries_labour_costs)
 
-# Print the total number of countries studied
+# Print the numbers of countries studied before and after removing countries containing empty fields
+countries_before_NA <- unique(final_data$country)
+print("Countries before removing empty fields")
+length(countries_before_NA)
+print(countries_before_NA)
+print("Final amount + number of countries studied")
 length(complete_countries)
+print(complete_countries)
 
+# Beginning of analysis
+# Five number summary for each variable
+print("Five number Summary")
+summary_final <- final_data_complete %>%
+  select(hpi_value, wage_growth, inflation_rate, affordability_gap) %>%
+  summary()
+print(summary_final)
+
+# Mean and median for each country
+print("Mean and median by country")
+country_stats <- final_data_complete %>%
+  group_by(country) %>%
+  summarise(
+    mean_HPI = mean(hpi_value),
+    median_HPI = median(hpi_value),
+    mean_wage = mean(wage_growth),
+    median_wage = median(wage_growth),
+    mean_inflation = mean(inflation_rate),
+    median_inflation = median(inflation_rate)
+  ) %>%
+  arrange(desc(mean_HPI))
+
+print(as.data.frame(country_stats))
 
