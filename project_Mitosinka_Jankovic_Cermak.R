@@ -152,3 +152,99 @@ country_stats <- final_data_complete %>%
 
 print(as.data.frame(country_stats))
 
+# Boxplots for HPI, Wage growth, Inflation rate, Affordability gap
+boxplot(final_data_complete$hpi_value, 
+        final_data_complete$wage_growth, 
+        final_data_complete$inflation_rate, 
+        final_data_complete$affordability_gap,
+        names = c("HPI\n(House Prices)", "Wage\nGrowth", "Inflation\nRate", "Affordability\nGap"),
+        col = c("lightblue", "lightgreen", "pink", "orange"),
+        main = "Distribution of Economic Indicators",
+        ylab = "Percentage Change (%)")
+grid(nx = NA, ny = NULL, col = "lightgray", lty = "dotted")
+
+# Frequency tables  
+# HPI
+hpi_freq <- final_data_complete %>%
+  mutate(Category = case_when(
+    hpi_value < 0 ~ "1. Negative (<0%)",
+    hpi_value >= 0 & hpi_value <= 5 ~ "2. Moderate (0-5%)",
+    hpi_value > 5 & hpi_value <= 10 ~ "3. High (5-10%)",
+    hpi_value > 10 ~ "4. Extreme (>10%)"
+  )) %>%
+  count(Category, name = "Count") %>%
+  mutate(Percentage = round((Count / sum(Count)) * 100, 1))
+
+# Wage Growth
+wage_freq <- final_data_complete %>%
+  mutate(Category = case_when(
+    wage_growth < 0 ~ "1. Negative (<0%)",
+    wage_growth >= 0 & wage_growth <= 5 ~ "2. Moderate (0-5%)",
+    wage_growth > 5 & wage_growth <= 10 ~ "3. High (5-10%)",
+    wage_growth > 10 ~ "4. Extreme (>10%)"
+  )) %>%
+  count(Category, name = "Count") %>%
+  mutate(Percentage = round((Count / sum(Count)) * 100, 1))
+
+# Inflation Rate
+inflation_freq_unified <- final_data_complete %>%
+  mutate(Category = case_when(
+    inflation_rate < 0 ~ "1. Negative (<0%)",
+    inflation_rate >= 0 & inflation_rate <= 5 ~ "2. Moderate (0-5%)",
+    inflation_rate > 5 & inflation_rate <= 10 ~ "3. High (5-10%)",
+    inflation_rate > 10 ~ "4. Extreme (>10%)"
+  )) %>%
+  count(Category, name = "Count") %>%
+  mutate(Percentage = round((Count / sum(Count)) * 100, 1))
+
+# Affordability Gap
+gap_freq <- final_data_complete %>%
+  mutate(Category = case_when(
+    affordability_gap < 0 ~ "1. Negative (<0%) - Affordable",
+    affordability_gap >= 0 & affordability_gap <= 5 ~ "2. Moderate Gap (0-5%)",
+    affordability_gap > 5 & affordability_gap <= 10 ~ "3. High Gap (5-10%)",
+    affordability_gap > 10 ~ "4. Extreme Gap (>10%)"
+  )) %>%
+  count(Category, name = "Count") %>%
+  mutate(Percentage = round((Count / sum(Count)) * 100, 1))
+
+# Frequency tables results
+print("HPI (House prices) FREQUENCY")
+print(as.data.frame(hpi_freq))
+
+print("WAGE GROWTH FREQUENCY")
+print(as.data.frame(wage_freq))
+
+print("INFLATION FREQUENCY")
+print(as.data.frame(inflation_freq_unified))
+
+print("AFFORDABILITY GAP FREQUENCY")
+print(as.data.frame(gap_freq))
+
+# Calculate Volatility (Standard Deviation)
+calculate_volatility <- function(data_vector) {
+  return(sd(data_vector, na.rm = TRUE))
+}
+# COUNTRY RANKING BY AFFORDABILITY GAP - Ranking from worst (HPI outpaces wages) to best (Wages outpace HPI)
+country_gap_ranking <- final_data_complete %>%
+  group_by(country) %>%
+  summarise(
+    avg_gap = mean(affordability_gap),
+    gap_volatility = calculate_volatility(affordability_gap)
+  ) %>%
+  arrange(desc(avg_gap))
+
+print("--- Country Ranking by Affordability Gap (Mean) ---")
+print(as.data.frame(country_gap_ranking))
+
+# GLOBAL VOLATILITY COMPARISON - Comparing which economic indicator is the most unstable
+global_volatility <- final_data_complete %>%
+  summarise(
+    HPI_SD = calculate_volatility(hpi_value),
+    Wage_SD = calculate_volatility(wage_growth),
+    Inflation_SD = calculate_volatility(inflation_rate),
+    Gap_SD = calculate_volatility(affordability_gap)
+  )
+
+print("Global Volatility (Standard Deviation)")
+print(global_volatility)
