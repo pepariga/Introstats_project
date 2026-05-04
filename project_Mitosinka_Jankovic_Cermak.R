@@ -248,3 +248,52 @@ global_volatility <- final_data_complete %>%
 
 print("Global Volatility (Standard Deviation)")
 print(global_volatility)
+
+#VISUALIZATION
+
+# 1. HISTOGRAM: Distribution of the Affordability Gap
+ggplot(final_data_complete, aes(x = affordability_gap)) +
+  geom_histogram(binwidth = 2, fill = "steelblue", color = "black", alpha = 0.8) +
+  #Red Line to clearly indicate where housing becomes affordable
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed", linewidth = 1) +
+  labs(
+    title = "Distribution of the Real Estate Affordability Gap",
+    x = "Affordability Gap (Percentage Points)",
+    y = "Frequency (Number of Observations)"
+  ) +
+  theme_minimal()
+
+# 2. SCATTERPLOT: Wage Growth vs. HPI
+ggplot(final_data_complete, aes(x = wage_growth, y = hpi_value)) +
+  geom_point(color = "darkorange", alpha = 0.7, size = 2.5) +
+  # Adding a basic trend line to see the relationship
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  labs(
+    title = "Relationship Between Labor Income and Real Estate Prices",
+    x = "Annual Wage Growth (%)",
+    y = "Annual House Price Index Change (%)"
+  ) +
+  theme_minimal()
+
+# 3. BAR CHART: Average Affordability Gap by Country
+# First, we calculate the average gap and order the countries
+avg_gap_data <- final_data_complete %>%
+  group_by(country) %>%
+  summarise(avg_gap = mean(affordability_gap, na.rm = TRUE)) %>%
+  # Sort from lowest to highest so the chart looks organized
+  arrange(avg_gap) %>%
+  # This step locks the sorted order in place for the plot
+  mutate(country = factor(country, levels = country))
+
+ggplot(avg_gap_data, aes(x = avg_gap, y = country)) +
+  # Bars will be red if the gap is positive (bad for citizens), green if negative
+  geom_col(aes(fill = avg_gap > 0)) +
+  scale_fill_manual(values = c("TRUE" = "indianred", "FALSE" = "palegreen4")) +
+  theme_minimal() +
+  # Hiding the legend because the colors are self-explanatory
+  theme(legend.position = "none") +
+  labs(
+    title = "Average Affordability Gap by Country",
+    x = "Average Affordability Gap (Percentage Points)",
+    y = "Country"
+  )
