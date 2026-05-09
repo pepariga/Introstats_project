@@ -249,6 +249,16 @@ global_volatility <- final_data_complete %>%
 print("Global Volatility (Standard Deviation)")
 print(global_volatility)
 
+# Table Affortability gap, standart deviation (export)
+clean_country_ranking <- country_gap_ranking %>%
+  mutate(
+    avg_gap = round(avg_gap, 2),
+    gap_volatility = round(gap_volatility, 2)
+  )
+print("Table for export")
+print(as.data.frame(clean_country_ranking))
+View(clean_country_ranking)
+
 #VISUALIZATION
 
 # 1. HISTOGRAM: Distribution of the Affordability Gap
