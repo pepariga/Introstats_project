@@ -1,4 +1,4 @@
-
+#if not working check working directory
 library(tidyverse)
 # Importing datasets
 
@@ -307,3 +307,14 @@ ggplot(avg_gap_data, aes(x = avg_gap, y = country)) +
     x = "Average Affordability Gap (Percentage Points)",
     y = "Country"
   )
+
+#CENTRAL FINDINGS
+
+#Correlations
+#Income and house prices
+cor(final_data_complete$wage_growth, final_data_complete$hpi_value)
+#inflation and house prices
+cor(final_data_complete$inflation_rate, final_data_complete$hpi_value)
+#higher wages and affordability gap
+cor(final_data_complete$wage_growth, final_data_complete$affordability_gap)
+
